@@ -18,7 +18,7 @@ while len(l1) > 0:
 		servers.append( {'name': name, 'ipaddr': ip, 'port': port, 'xnkid': xnkid, 'xnaddr': xnaddr, 'map':'null', 'mode':'null', 'players':'1','maxPlayers':'16','special':'standard','ping':'0'} )
 f.close()
 try:
-	cnx = mysql.connector.conect([REDACTED])
+	cnx = mysql.connector.connect([REDACTED])
 except mysql.connector.Error as err:
   if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
     print("Something is wrong with your user name or password")
@@ -30,7 +30,7 @@ else:
 	cursor = cnx.cursor()
 	clear_servers = ("DELETE FROM Servers WHERE 1")
 	cursor.execute(clear_servers)
-	add_server = ("INSERT INTO Servers (name, map, mode, players, maxplayers, special, ping, ipaddr, xnaddr, xnkid) VALUES (%(name)s, %(map)s, %(mode)s, %(players)s, %(maxplayers)s, %(special)s, %(ping)s, %(ipaddr)s, %(xnaddr)s, %(xnkid)s)")
+	add_server = ("INSERT INTO Servers (name, map, mode, players, maxPlayers, special, ping, ipaddr, xnaddr, xnkid) VALUES (%(name)s, %(map)s, %(mode)s, %(players)s, %(maxPlayers)s, %(special)s, %(ping)s, %(ipaddr)s, %(xnaddr)s, %(xnkid)s)")
 	for serverdata in servers:
 		cursor.execute(add_server, serverdata)
 	cnx.commit()
