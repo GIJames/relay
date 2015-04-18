@@ -1,8 +1,10 @@
 import mysql.connector
 from mysql.connector import errorcode
+import time
 servers = []
 l1 = ' '
 f = open('out.txt', 'r')
+now = time.time()
 while len(l1) > 0:
 	l1 = f.readline()
 	l2 = f.readline()
@@ -15,7 +17,7 @@ while len(l1) > 0:
 		port = parsplit2[2].rstrip(')\r\n')
 		xnkid = l2.partition(':')[2].lstrip().rstrip('\r\n')
 		xnaddr = l3.partition(':')[2].lstrip().rstrip('\r\n')
-		servers.append( {'name': name, 'ipaddr': ip, 'port': port, 'xnkid': xnkid, 'xnaddr': xnaddr, 'map':'null', 'mode':'null', 'players':'1','maxPlayers':'16','special':'standard','ping':'0'} )
+		servers.append( {'name': name, 'ipaddr': ip, 'port': port, 'xnkid': xnkid, 'xnaddr': xnaddr, 'map':'null', 'mode':'null', 'players':'1','maxPlayers':'16','special':'standard','ping':'0','lastSeen':now} )
 f.close()
 try:
 	cnx = mysql.connector.connect([REDACTED])
@@ -28,9 +30,10 @@ except mysql.connector.Error as err:
     print(err)
 else:
 	cursor = cnx.cursor()
-	clear_servers = ("DELETE FROM Servers WHERE 1")
-	cursor.execute(clear_servers)
-	add_server = ("INSERT INTO Servers (name, map, mode, players, maxPlayers, special, ping, ipaddr, xnaddr, xnkid) VALUES (%(name)s, %(map)s, %(mode)s, %(players)s, %(maxPlayers)s, %(special)s, %(ping)s, %(ipaddr)s, %(xnaddr)s, %(xnkid)s)")
+	clear_servers = ("DELETE FROM Servers WHERE lastSeen < %(max_age)s")
+	clear_data = {'max_age':now - 300} #timeout is 5 minutes. Might be a bit long, but we'll use it for now.
+	cursor.execute(clear_servers, clear_data)
+	add_server = ("INSERT INTO Servers (name, map, mode, players, maxPlayers, special, ping, ipaddr, xnaddr, xnkid, lastSeen) VALUES (%(name)s, %(map)s, %(mode)s, %(players)s, %(maxPlayers)s, %(special)s, %(ping)s, %(ipaddr)s, %(xnaddr)s, %(xnkid)s, %(lastSeen)s) ON DUPLICATE KEY UPDATE lastSeen = %(lastSeen)s")
 	for serverdata in servers:
 		cursor.execute(add_server, serverdata)
 	cnx.commit()
